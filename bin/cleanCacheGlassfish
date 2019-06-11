@@ -1,0 +1,13 @@
+cd /u01/app/hbuser/product/glassfish4/glassfish/domains/domain1/old/
+rm -rf generated/
+rm -rf logs/
+rm -rf e2ewcache/ 
+rm -rf osgi-cache/
+rm -rf imq/
+
+cd ..
+mv imq/ old/
+mv generated/ old/
+mv osgi-cache/ old/
+mv e2ewcache/ old/
+mv logs/ old/

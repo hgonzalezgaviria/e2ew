@@ -1,0 +1,4 @@
+stopGlassfishSever
+cd /u01/app/hbuser/product/e2ew/logs
+find . -name "*.log" -type f -delete
+

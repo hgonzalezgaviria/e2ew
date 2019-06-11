@@ -1,0 +1,34 @@
+#!/bin/bash
+# -*- ENCODING: UTF-8 -*-
+# Start Server Glassfish Principal
+pathGlassfishServices="/u01/app/hbuser/admin/scripts/bin/glassfishServices"
+pathGlassfishWeb="/u01/app/hbuser/admin/scripts/bin/glassfishWeb"
+pathGlassfishSecurity="/u01/app/hbuser/admin/scripts/bin/glassfishSecurity"
+pathGlassfishId="/u01/app/hbuser/admin/scripts/bin/glassfishId"
+rsync -rtvu --delete /var/www/html/bin/ /u01/app/hbuser/admin/scripts/bin/
+
+case $1 in
+	startservices)
+	echo "Preparado para el inicio Server Services..." > /u01/app/hbuser/product/e2ew/logs/service.log
+		$pathGlassfishServices start
+		#break
+		;;
+	startweb)
+	echo "Preparado para el inicio Server Web..." > /u01/app/hbuser/product/e2ew/logs/service.log
+		$pathGlassfishWeb start
+		#break
+		;;
+	startscurity)
+	echo "Preparado para el inicio Server Security..." > /u01/app/hbuser/product/e2ew/logs/service.log
+		$pathGlassfishSecurity start
+		#break
+		;;
+	startid)
+	echo "Preparado para el inicio Server ID..." > /u01/app/hbuser/product/e2ew/logs/service.log
+		$pathGlassfishId start
+		#break
+		;;
+	*)
+		echo "Sorry, I don't understand. parameters: startservices:Services startweb:Web startscurity:Security startid:Id"
+		;;
+  esac

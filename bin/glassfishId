@@ -1,0 +1,68 @@
+#!/bin/bash
+# -*- ENCODING: UTF-8 -*-
+# Start Server Glassfish
+pathPass="/u01/app/hbuser/product/glassfish4/glassfish/config/inittask.txt"
+pathGlassfish="/u01/app/hbuser/product/glassfish4/glassfish/bin/asadmin"
+
+case $1 in
+	start)
+		#echo "See you again!"
+		echo "Iniciando Server..." >> /u01/app/hbuser/product/e2ew/logs/service.log
+		date >> /u01/app/hbuser/product/e2ew/logs/service.log
+		echo "carga variables" >> /u01/app/hbuser/product/e2ew/logs/service.log
+		source /etc/environment
+		source $HOME/.bash_profile
+		VARIABLES=`cat /etc/environment`
+		if [ -z "$VARIABLES" ]
+		then
+			echo "Variables del sistemas vacias"
+		else
+			echo "SetEnv AS_URL_ELB "$AS_URL_ELB  >> /etc/httpd/conf.d/environment.conf
+			sudo /usr/sbin/apachectl restart
+			echo "update repo..." >> /u01/app/hbuser/product/e2ew/logs/service.log
+			#cd ~/html/ && git pull
+			rsync -rtvu --delete /var/www/html/bin/ /u01/app/hbuser/admin/scripts/bin/
+			echo "Clean Temp..." >> /u01/app/hbuser/product/e2ew/logs/service.log
+			cleanCacheGlassfish
+			echo "stop..." >> /u01/app/hbuser/product/e2ew/logs/service.log
+			stopGlassfishSever
+			echo "Actualizando dependencias glassfish" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			echo "AS_ADMIN_ALIASPASSWORD="$AS_ADMIN_ALIASPASSWORD >> $pathPass
+			startGlassfishSever
+			echo "Inicio temp server" >> /u01/app/hbuser/product/e2ew/logs/service.log		
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ewsecurity.db.usere2f=$E2EWSECURITY_DB_USERE2F
+			echo "Actualizando dependencias glassfish --> add user e2f" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ewsecurity.db.userspi=$E2EWSECURITY_DB_USERSPI
+			echo "Actualizando dependencias glassfish --> add user SPIder" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ewsecurity.db.usereic=$E2EWSECURITY_DB_USEREIC
+			echo "Actualizando dependencias glassfish --> add user ECI" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			#/u01/app/hbuser/product/glassfish4/glassfish/bin/asadmin --port 4848 --host localhost  create-jvm-options -De2ewsecurity.db.url=$E2EWSECURITY_DB_URL
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ewsecurity.db.url=$E2EWSECURITY_DB_URL
+			echo "Actualizando dependencias glassfish --> add path Db" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ew.emr.url=$AS_URL_EMR
+			echo "Actualizando dependencias glassfish --> add url EMR" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-jvm-options -De2ew.emr.port=$AS_PORT_EMR
+			echo "Actualizando dependencias glassfish --> add port EMR" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass create-password-alias dbpass
+			echo "Actualizando dependencias glassfish --> Asignacion pass" >> /u01/app/hbuser/product/e2ew/logs/service.log
+			stopGlassfishSever
+			echo "Ahora si..!"
+			sed -i 's/enabled="false"//g' /u01/app/hbuser/product/glassfish4/glassfish/domains/domain1/config/domain.xml
+			startGlassfishSever
+			sudo systemctl enable glassfish.service
+			echo "server Iniciado & Activado." >> /u01/app/hbuser/product/e2ew/logs/service.log
+			$pathGlassfish --port 4848 --host localhost  --user=admin --interactive=false  --passwordfile $pathPass list-applications >> /u01/app/hbuser/product/e2ew/logs/service.log
+			statusGlassfishSever >> /u01/app/hbuser/product/e2ew/logs/service.log
+			#true > /u01/app/hbuser/product/glassfish4/glassfish/domains/domain1/config/initpass.txt
+			sed -i '/AS_ADMIN_ALIASPASSWORD/d' $pathPass			
+		fi		
+		;;
+	stop)
+		#echo "See you again!"
+		echo "Opción de inicio del server invalida" > /u01/app/hbuser/product/e2ew/logs/service.log
+		break
+		;;
+	*)
+		echo "Sorry, I don't understand"
+		;;
+  esac
